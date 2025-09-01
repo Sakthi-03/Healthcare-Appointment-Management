@@ -1,0 +1,62 @@
+stages:
+  - build
+  # - docker
+  # - deploy
+# -------------------------------------------------------------------------------
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+# --------------------------- BUILD ----------------------------------------------------
+build:
+  stage: build
+  image: node:20-alpine
+  script:
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - dist
+
+# # ------------------------------ BUILD DOCKER-------------------------------------------------
+
+# docker-build:
+#   stage: docker
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   script:
+#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+#     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .  #/ Dockerfile will consider
+#     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+#     - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
+#     - docker push $CI_REGISTRY_IMAGE:latest
+
+# # ------------------------------ DEPLOY  on K8S using the DOCKER-------------------------------------------------
+
+# deploy:
+#   stage: deploy
+#   image: google/cloud-sdk:latest
+#   script:
+
+#     - echo "$GCP_KEYEE" | head -n 5
+#     - echo "$GCP_KEYEE" > ${CI_PROJECT_DIR}/gcp-key.json
+#     - ls -l ${CI_PROJECT_DIR}/gcp-key.json
+#     - cat ${CI_PROJECT_DIR}/gcp-key.json | head -10
+#      #connection
+#     - gcloud auth activate-service-account --key-file=${CI_PROJECT_DIR}/gcp-key.json  # Authenticate to GCP
+#     - gcloud config set project $GCP_PROJECT # Set the GCP project
+#     - gcloud container clusters get-credentials $GKE_CLUSTER --zone $GCP_ZONE --project $GCP_PROJECT # Get GKE credentials
+
+
+#     - kubectl create secret docker-registry gitlab-registry --docker-server=registry.gitlab.com --docker-username=$CI_DEPLOY_USER --docker-password=$CI_DEPLOY_PASSWORD --docker-email=$GITLAB_USER_EMAIL --namespace=default --dry-run=client -o yaml | kubectl apply -f -
+
+#     - kubectl apply -f k8s/
+#     - kubectl replace --force -f k8s/deployment.yaml
+#   environment:
+#     name: production
+#     url: http://$CI_PROJECT_PATH_SLUG.gcp.com
+#   only:
+#     - master
+
